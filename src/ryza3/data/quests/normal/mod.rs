@@ -8,7 +8,8 @@ use serde::Serialize;
 use tracing::warn;
 use typescript_type_def::TypeDef;
 
-use crate::{ryza3::data::strings_table::StringsTable, utils::PakIndex};
+use crate::ryza3::data::strings_table::StringsTable;
+use crate::utils::PakIndex;
 
 #[derive(Serialize, TypeDef)]
 pub struct NormalQuest {

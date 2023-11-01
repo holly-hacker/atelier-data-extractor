@@ -2,9 +2,8 @@ use anyhow::Context;
 use serde::Serialize;
 use typescript_type_def::TypeDef;
 
-use crate::utils::PakIndex;
-
 use super::strings_table::StringsTable;
+use crate::utils::PakIndex;
 
 mod normal;
 
