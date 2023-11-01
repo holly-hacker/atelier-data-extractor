@@ -2,8 +2,7 @@ use anyhow::Context;
 use serde::Serialize;
 use typescript_type_def::TypeDef;
 
-use super::strings_table::StringsTable;
-use crate::utils::PakIndex;
+use crate::utils::{ExtractableData, PakIndex};
 
 mod normal;
 
@@ -12,10 +11,12 @@ pub struct QuestData {
     pub normal_quests: Vec<normal::NormalQuest>,
 }
 
-impl QuestData {
-    pub fn read(pak_index: &mut PakIndex, strings: &StringsTable) -> anyhow::Result<Self> {
-        let normal_quests =
-            normal::NormalQuest::read(pak_index, strings).context("read normal quests")?;
+impl ExtractableData<super::Ryza3Context> for QuestData {
+    const FILE_NAME: &'static str = "quests";
+
+    fn read(pak_index: &mut PakIndex, ctx: &super::Ryza3Context) -> anyhow::Result<Self> {
+        let normal_quests = normal::NormalQuest::read(pak_index, &ctx.strings_table)
+            .context("read normal quests")?;
 
         Ok(Self { normal_quests })
     }

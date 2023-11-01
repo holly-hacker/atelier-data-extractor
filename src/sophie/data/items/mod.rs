@@ -3,7 +3,7 @@ use serde::Serialize;
 use tracing::debug;
 use typescript_type_def::TypeDef;
 
-use crate::utils::PakIndex;
+use crate::utils::{ExtractableData, PakIndex};
 
 mod item_data;
 
@@ -43,15 +43,17 @@ pub struct Item {
     pub player_characters: Vec<usize>,
 }
 
-impl Item {
-    pub fn read(pak_index: &mut PakIndex) -> anyhow::Result<Vec<Self>> {
+impl ExtractableData<super::SophieContext> for Vec<Item> {
+    const FILE_NAME: &'static str = "items";
+
+    fn read(pak_index: &mut PakIndex, _ctx: &super::SophieContext) -> anyhow::Result<Self> {
         debug!("Reading item data");
         let item_data = item_data::ItemData::read(pak_index).context("read item data")?;
 
         let items = item_data
             .into_iter()
             .map(|item| {
-                Ok(Self {
+                Ok(Item {
                     name: item.name,
                     tag: item.tag,
                     image_no: item.image_no,

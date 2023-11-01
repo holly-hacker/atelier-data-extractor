@@ -7,6 +7,7 @@ use tracing::{debug, info};
 use typescript_type_def::{write_definition_file, DefinitionFileOptions, TypeDef};
 
 use crate::utils::game_slug;
+use crate::{ryza3, sophie};
 
 /// Generate typescript definitions
 #[derive(FromArgs)]
@@ -25,16 +26,10 @@ impl Args {
         debug!(?output_folder);
 
         debug!("Generating typedefs");
-        gen_typedefs::<super::sophie::data::SophieData>(
-            &output_folder,
-            &format!("{}.d.ts", game_slug(GameVersion::A17)),
-        )
-        .context("generate typedefs for sophie")?;
-        gen_typedefs::<super::ryza3::data::Ryza3Data>(
-            &output_folder,
-            &format!("{}.d.ts", game_slug(GameVersion::A24)),
-        )
-        .context("generate typedefs for ryza3")?;
+        sophie::write_typedefs(&output_folder.join(game_slug(GameVersion::A17)))
+            .context("generate typedefs for sophie")?;
+        ryza3::write_typedefs(&output_folder.join(game_slug(GameVersion::A24)))
+            .context("generate typedefs for ryza3")?;
         gen_typedefs::<crate::utils::images::texture_atlas::UniformTextureAtlasInfo>(
             &output_folder,
             "texture_atlas.d.ts",
@@ -49,7 +44,7 @@ impl Args {
     }
 }
 
-fn gen_typedefs<T>(output_folder: &Path, file_name: &str) -> anyhow::Result<()>
+pub fn gen_typedefs<T>(output_folder: &Path, file_name: &str) -> anyhow::Result<()>
 where
     T: TypeDef,
 {

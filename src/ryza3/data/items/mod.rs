@@ -13,8 +13,7 @@ use serde::Serialize;
 use tracing::debug;
 use typescript_type_def::TypeDef;
 
-use super::strings_table::StringsTable;
-use crate::utils::PakIndex;
+use crate::utils::{ExtractableData, PakIndex};
 
 #[derive(Serialize, TypeDef)]
 pub struct Item {
@@ -64,8 +63,10 @@ pub struct Item {
     pub cat: Vec<String>,
 }
 
-impl Item {
-    pub fn read(pak_index: &mut PakIndex, strings: &StringsTable) -> anyhow::Result<Vec<Self>> {
+impl ExtractableData<super::Ryza3Context> for Vec<Item> {
+    const FILE_NAME: &'static str = "items";
+
+    fn read(pak_index: &mut PakIndex, ctx: &super::Ryza3Context) -> anyhow::Result<Self> {
         debug!("Reading item data");
         let item_data = item_data::ItemData::read(pak_index).context("read item data")?;
 
@@ -77,23 +78,23 @@ impl Item {
             .into_iter()
             .enumerate()
             .map(|(item_index, d)| {
-                Ok(Self {
+                Ok(Item {
                     tag: library_items.get(item_index).map(|l| l.item_tag.clone()),
                     library_note: library_items.get(item_index).map(|l| {
                         l.note_id
                             .iter()
-                            .filter_map(|id| strings.id_lookup.get(id).cloned())
+                            .filter_map(|id| ctx.strings_table.id_lookup.get(id).cloned())
                             .collect::<Vec<_>>()
                             .join("\n")
                     }),
 
                     name: d
                         .name_id
-                        .and_then(|id| strings.id_lookup.get(&id).cloned())
+                        .and_then(|id| ctx.strings_table.id_lookup.get(&id).cloned())
                         .filter(|s| !s.is_empty()),
                     temp_name: d
                         .temp_name_id
-                        .and_then(|id| strings.id_lookup.get(&id).cloned()),
+                        .and_then(|id| ctx.strings_table.id_lookup.get(&id).cloned()),
                     temp_end_event: d.temp_end_event,
                     sort: d.sort,
                     img_no: d.img_no,
@@ -123,7 +124,7 @@ impl Item {
                     cat: d.cat,
                 })
             })
-            .collect::<anyhow::Result<Vec<Self>>>()
+            .collect::<anyhow::Result<Self>>()
             .context("create items")?;
 
         Ok(items)

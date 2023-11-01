@@ -3,7 +3,7 @@ use serde::Serialize;
 use tracing::debug;
 use typescript_type_def::TypeDef;
 
-use crate::utils::PakIndex;
+use crate::utils::{ExtractableData, PakIndex};
 
 mod rumor;
 
@@ -40,8 +40,10 @@ pub struct Rumor {
     pub text: String,
 }
 
-impl Rumor {
-    pub fn read(pak_index: &mut PakIndex) -> anyhow::Result<Vec<Self>> {
+impl ExtractableData<super::SophieContext> for Vec<Rumor> {
+    const FILE_NAME: &'static str = "rumors";
+
+    fn read(pak_index: &mut PakIndex, _ctx: &super::SophieContext) -> anyhow::Result<Self> {
         debug!("Reading present_ex data");
         let rumors = rumor::Rumor::read(pak_index).context("read rumor")?;
 

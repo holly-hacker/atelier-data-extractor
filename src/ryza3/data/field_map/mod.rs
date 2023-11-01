@@ -3,8 +3,7 @@ use std::collections::BTreeMap;
 use serde::Serialize;
 use typescript_type_def::TypeDef;
 
-use crate::ryza3::data::strings_table::StringsTable;
-use crate::utils::PakIndex;
+use crate::utils::{ExtractableData, PakIndex};
 
 mod fm_info;
 mod fm_info2;
@@ -48,8 +47,10 @@ pub struct RegionMap {
     pub scale: [f32; 3],
 }
 
-impl FieldMapData {
-    pub fn read(pak_index: &mut PakIndex, strings: &StringsTable) -> anyhow::Result<Self> {
+impl ExtractableData<super::Ryza3Context> for FieldMapData {
+    const FILE_NAME: &'static str = "field_map";
+
+    fn read(pak_index: &mut PakIndex, ctx: &super::Ryza3Context) -> anyhow::Result<Self> {
         let fm_info = fm_info::FieldMapInfo::read(pak_index)?;
         let fm_info2 = fm_info2::FieldMapInfo2::read(pak_index)?;
         let region_maps = region_maps::RegionMap::read(pak_index)?;
@@ -62,7 +63,7 @@ impl FieldMapData {
             .map(|(info, info2)| FieldMap {
                 field_map_name: info
                     .field_map_name_id
-                    .and_then(|id| strings.id_lookup.get(&id))
+                    .and_then(|id| ctx.strings_table.id_lookup.get(&id))
                     .cloned(),
                 data_file_name: info.data_file_name,
                 load_region: info.load_region,

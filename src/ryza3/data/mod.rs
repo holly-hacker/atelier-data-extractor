@@ -1,10 +1,12 @@
-use anyhow::Context;
-use serde::Serialize;
-use tracing::info;
-use typescript_type_def::TypeDef;
+use std::path::Path;
 
+use anyhow::Context;
+use gust_pak::common::GameVersion;
+use tracing::{debug, info};
+
+use self::strings_table::StringsTable;
 use super::executable::Ryza3ExecutableData;
-use crate::utils::PakIndex;
+use crate::utils::{game_slug, PakIndex};
 
 mod enemies;
 mod feeding;
@@ -17,85 +19,48 @@ mod quests;
 mod recipes;
 mod strings_table;
 
-#[derive(Serialize, TypeDef)]
-pub struct Ryza3Data {
-    pub item_data: Vec<items::Item>,
-    pub item_category_data: item_categories::ItemCategoryData,
-    pub item_effect_data: item_effects::ItemEffectData,
-    pub recipe_data: recipes::RecipeData,
-    pub field_map: field_map::FieldMapData,
-    pub field_data: field_data::FieldData,
-    pub enemy_data: Vec<enemies::Enemy>,
-    pub puni_feeding_data: feeding::PuniFeedingData,
-    pub quests: quests::QuestData,
+pub struct Ryza3Context {
+    pub executable_data: Ryza3ExecutableData,
+    pub strings_table: StringsTable,
 }
 
-impl Ryza3Data {
-    pub fn read_all(
-        pak_index: &mut PakIndex,
-        executable_data: &Ryza3ExecutableData,
-    ) -> anyhow::Result<Self> {
-        // TODO: consider reading other languages too
-        let strings_table = strings_table::StringsTable::read(pak_index).context("read strings")?;
+pub fn extract(
+    game_directory: &Path,
+    mut pak_index: PakIndex,
+    output_directory: &Path,
+) -> anyhow::Result<()> {
+    let output_directory = output_directory.join(game_slug(GameVersion::A24));
 
-        info!(
-            "Read {} strings by id and {} strings by number",
-            strings_table.id_lookup.len(),
-            strings_table.no_lookup.len()
-        );
+    debug!("reading executable data");
+    let executable_data =
+        Ryza3ExecutableData::read_all(game_directory).context("read executable data")?;
 
-        // NOTE: itemdata_no appears to be the exact same file
-        let item_data = items::Item::read(pak_index, &strings_table).context("read items")?;
-        info!("Read data for {} items", item_data.len());
+    debug!("Creating output directory");
+    std::fs::create_dir_all(&output_directory).context("create output directory")?;
 
-        let item_category_data =
-            item_categories::ItemCategoryData::read(executable_data, &strings_table)
-                .context("read item categories")?;
-        info!(
-            "Read data for {} item categories",
-            item_category_data.categories.len()
-        );
+    info!("Writing files");
 
-        let item_effect_data =
-            item_effects::ItemEffectData::read(pak_index, executable_data, &strings_table)
-                .context("read item effects")?;
-        info!(
-            "Read data for {} item effects",
-            item_effect_data.item_effects.len()
-        );
+    let ctx = Ryza3Context {
+        executable_data,
+        strings_table: StringsTable::read(&mut pak_index).context("read strings table")?,
+    };
 
-        let recipe_data =
-            recipes::RecipeData::read(pak_index, &strings_table).context("read recipes")?;
-        info!("Read data for {} recipes", recipe_data.recipes.len());
+    write_to_files(&mut pak_index, &ctx, &output_directory).context("write data to files")?;
 
-        let field_map =
-            field_map::FieldMapData::read(pak_index, &strings_table).context("read field map")?;
-        // info!("Read data for {} field data", field_map.0.len());
-        info!("Read data for field map");
+    info!("Wrote ryza3 data to {:?}", output_directory);
 
-        let field_data = field_data::FieldData::read(pak_index).context("read field data")?;
-        info!("Read data for {} field data", field_data.0.len());
-
-        let enemy_data = enemies::read(pak_index, &strings_table).context("read enemies")?;
-        info!("Read data for {} enemies", enemy_data.len());
-
-        let puni_feeding_data = feeding::PuniFeedingData::read(pak_index, &strings_table)
-            .context("read puni feeding info")?;
-        info!("Read puni feeding data");
-
-        let quests = quests::QuestData::read(pak_index, &strings_table).context("read quests")?;
-        info!("Read quest data");
-
-        Ok(Self {
-            item_data,
-            item_category_data,
-            item_effect_data,
-            recipe_data,
-            field_map,
-            field_data,
-            enemy_data,
-            puni_feeding_data,
-            quests,
-        })
-    }
+    Ok(())
 }
+
+crate::generate_data_functions!(
+    context Ryza3Context:
+    Vec::<items::Item>,
+    item_categories::ItemCategoryData,
+    item_effects::ItemEffectData,
+    recipes::RecipeData,
+    field_map::FieldMapData,
+    field_data::FieldData,
+    Vec::<enemies::Enemy>,
+    feeding::PuniFeedingData,
+    quests::QuestData,
+);

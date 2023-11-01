@@ -5,8 +5,7 @@ use anyhow::Context;
 use serde::Serialize;
 use typescript_type_def::TypeDef;
 
-use super::strings_table::StringsTable;
-use crate::utils::PakIndex;
+use crate::utils::{ExtractableData, PakIndex};
 
 /// A puni species that can result from feeding the puni.
 #[derive(Serialize, TypeDef)]
@@ -58,8 +57,10 @@ pub struct PuniFeedingData {
     pub species: Vec<PuniFeedingSpecies>,
 }
 
-impl PuniFeedingData {
-    pub fn read(pak_index: &mut PakIndex, strings: &StringsTable) -> anyhow::Result<Self> {
+impl ExtractableData<super::Ryza3Context> for PuniFeedingData {
+    const FILE_NAME: &'static str = "puni_feeding";
+
+    fn read(pak_index: &mut PakIndex, ctx: &super::Ryza3Context) -> anyhow::Result<Self> {
         let unique_events = unique_item_event::FeedingUniqueItemEvent::read(pak_index)
             .context("read unique events")?;
         let species = species::Species::read(pak_index).context("read species")?;
@@ -93,7 +94,7 @@ impl PuniFeedingData {
         let species = species
             .into_iter()
             .map(|s| PuniFeedingSpecies {
-                name: strings.id_lookup.get(&s.name).unwrap().clone(),
+                name: ctx.strings_table.id_lookup.get(&s.name).unwrap().clone(),
                 character_tag: s.chara_tag,
                 image_no: s.image_no,
                 energy: (s.ene_min, s.ene_max),

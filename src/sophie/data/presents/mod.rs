@@ -5,7 +5,7 @@ use serde::Serialize;
 use tracing::debug;
 use typescript_type_def::TypeDef;
 
-use crate::utils::PakIndex;
+use crate::utils::{ExtractableData, PakIndex};
 
 mod point;
 mod present_base;
@@ -48,8 +48,10 @@ pub struct PresentBasePoints {
     pub material: f32,
 }
 
-impl PresentInfo {
-    pub fn read(pak_index: &mut PakIndex) -> anyhow::Result<Self> {
+impl ExtractableData<super::SophieContext> for PresentInfo {
+    const FILE_NAME: &'static str = "presents";
+
+    fn read(pak_index: &mut PakIndex, _ctx: &super::SophieContext) -> anyhow::Result<Self> {
         debug!("Reading present_ex data");
         let present_ex = present_ex::PresentEx::read(pak_index).context("read present_ex")?;
         debug!("Reading present_base data");

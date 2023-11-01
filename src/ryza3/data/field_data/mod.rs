@@ -13,7 +13,7 @@ use tracing::trace;
 use typescript_type_def::TypeDef;
 
 use crate::ryza3::data::field_data::gimmick::GimmickProperty;
-use crate::utils::PakIndex;
+use crate::utils::{ExtractableData, PakIndex};
 
 #[derive(Serialize, TypeDef)]
 pub struct FieldData(pub BTreeMap<String, FieldDataSet>);
@@ -39,9 +39,10 @@ pub struct GimmickData {
     /// Whether the state of this gimmick is saved.
     pub save: bool,
 }
+impl ExtractableData<super::Ryza3Context> for FieldData {
+    const FILE_NAME: &'static str = "field_data";
 
-impl FieldData {
-    pub fn read(pak_index: &mut PakIndex) -> anyhow::Result<Self> {
+    fn read(pak_index: &mut PakIndex, _ctx: &super::Ryza3Context) -> anyhow::Result<Self> {
         let gimmicks = GimmickProperty::read(pak_index)?;
 
         let mut ret = Self(Default::default());

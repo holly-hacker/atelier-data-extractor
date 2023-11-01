@@ -7,9 +7,7 @@ use serde::Serialize;
 use tracing::debug;
 use typescript_type_def::TypeDef;
 
-use super::strings_table::StringsTable;
-use crate::ryza3::executable::Ryza3ExecutableData;
-use crate::utils::PakIndex;
+use crate::utils::{ExtractableData, PakIndex};
 
 #[derive(Serialize, TypeDef)]
 pub struct ItemEffectData {
@@ -42,24 +40,23 @@ pub struct EffectAttribute {
     pub max_2: Option<String>,
 }
 
-impl ItemEffectData {
-    pub fn read(
-        pak_index: &mut PakIndex,
-        executable_data: &Ryza3ExecutableData,
-        strings: &StringsTable,
-    ) -> anyhow::Result<Self> {
+impl ExtractableData<super::Ryza3Context> for ItemEffectData {
+    const FILE_NAME: &'static str = "item_effects";
+
+    fn read(pak_index: &mut PakIndex, ctx: &super::Ryza3Context) -> anyhow::Result<Self> {
         debug!("Reading item effects");
         let item_effects = item_effect::ItemEffect::read(pak_index).context("read item effects")?;
 
         // shortcut to avoid some extra code. if this fails, just extract the "index" from the name_id field
         assert_eq!(
             item_effects.len(),
-            executable_data.item_effects.len(),
+            ctx.executable_data.item_effects.len(),
             "assuming each item effect is listed in xml"
         );
 
         debug!("merging item effects");
-        let effects = executable_data
+        let effects = ctx
+            .executable_data
             .item_effects
             .iter()
             .enumerate()
@@ -69,14 +66,18 @@ impl ItemEffectData {
 
                 // ignore entries that don't have a name, they are most likely unused
                 // some entries also have trailing whitespace, so trim that
-                let name = strings.id_lookup.get(&string_id)?.trim();
+                let name = ctx.strings_table.id_lookup.get(&string_id)?.trim();
                 if name.is_empty() {
                     return None;
                 }
 
                 // get the library description
                 let description_string_id = format!("STR_LIBRARY_EFF_DETAIL_{i:04}");
-                let description = strings.id_lookup.get(&description_string_id).cloned();
+                let description = ctx
+                    .strings_table
+                    .id_lookup
+                    .get(&description_string_id)
+                    .cloned();
 
                 let item_effect = &item_effects[i];
                 if let Some(name_id) = &item_effect.name_id {

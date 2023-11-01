@@ -1,3 +1,4 @@
+mod extractable_data;
 pub mod images;
 mod pak_index;
 mod xml_reader;
@@ -5,6 +6,7 @@ mod xml_reader;
 use std::path::Path;
 use std::str::FromStr;
 
+pub use extractable_data::ExtractableData;
 use gust_pak::common::GameVersion;
 pub use pak_index::PakIndex;
 pub use xml_reader::{read_xml, read_xml_shift_jis, ElementReader};

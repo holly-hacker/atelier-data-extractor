@@ -3,7 +3,7 @@ use serde::Serialize;
 use tracing::debug;
 use typescript_type_def::TypeDef;
 
-use crate::utils::PakIndex;
+use crate::utils::{ExtractableData, PakIndex};
 
 mod dollmake_change;
 
@@ -35,8 +35,10 @@ pub struct Doll {
     pub doll_dmg_max: usize,
 }
 
-impl Doll {
-    pub fn read(pak_index: &mut PakIndex) -> anyhow::Result<Vec<Self>> {
+impl ExtractableData<super::SophieContext> for Vec<Doll> {
+    const FILE_NAME: &'static str = "dolls";
+
+    fn read(pak_index: &mut PakIndex, _ctx: &super::SophieContext) -> anyhow::Result<Self> {
         debug!("Reading dollmake_change data");
         let changes =
             dollmake_change::DollmakeChange::read(pak_index).context("read dollmake_change")?;

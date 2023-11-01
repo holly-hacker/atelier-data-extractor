@@ -12,7 +12,7 @@ use typescript_type_def::TypeDef;
 use self::itemrecipedata::{IngredientData, RecipeHeader};
 use self::mixfielddata::Field;
 use super::strings_table::StringsTable;
-use crate::utils::PakIndex;
+use crate::utils::{ExtractableData, PakIndex};
 
 mod itemrecipedata;
 mod mixfielddata;
@@ -165,9 +165,10 @@ pub struct FeatureDescription {
     loop_info_format: Option<String>,
     description: Option<String>,
 }
+impl ExtractableData<super::Ryza3Context> for RecipeData {
+    const FILE_NAME: &'static str = "recipes";
 
-impl RecipeData {
-    pub fn read(pak_index: &mut PakIndex, strings: &StringsTable) -> anyhow::Result<Self> {
+    fn read(pak_index: &mut PakIndex, ctx: &super::Ryza3Context) -> anyhow::Result<Self> {
         debug!("Reading item recipe data");
         let recipe_data =
             itemrecipedata::ItemRecipeData::read(pak_index).context("read item recipe data")?;
@@ -177,7 +178,7 @@ impl RecipeData {
             mixfielddata::ExtendedFieldData::read(pak_index).context("read item recipe data")?;
 
         debug!("Mapping feature descriptions");
-        let feature_descriptions = get_feature_descriptions(&mix_field_data, strings)
+        let feature_descriptions = get_feature_descriptions(&mix_field_data, &ctx.strings_table)
             .context("read mix feature descriptions")?;
 
         debug!("Mapping recipe data");

@@ -11,8 +11,7 @@ use serde::Serialize;
 use tracing::debug;
 use typescript_type_def::TypeDef;
 
-use super::strings_table::StringsTable;
-use crate::utils::PakIndex;
+use crate::utils::{ExtractableData, PakIndex};
 
 mod data;
 mod drop;
@@ -97,115 +96,119 @@ pub struct EnemyDrop {
     pub eff: Option<String>,
 }
 
-pub fn read(pak_index: &mut PakIndex, strings: &StringsTable) -> anyhow::Result<Vec<Enemy>> {
-    debug!("Reading enemy data");
-    let data = data::EnemyData::read(pak_index).context("read enemy_data")?;
+impl ExtractableData<super::Ryza3Context> for Vec<Enemy> {
+    const FILE_NAME: &'static str = "enemies";
 
-    debug!("Reading enemy status");
-    let status = status::EnemyStatus::read(pak_index).context("read enemy_status")?;
+    fn read(pak_index: &mut PakIndex, ctx: &super::Ryza3Context) -> anyhow::Result<Self> {
+        debug!("Reading enemy data");
+        let data = data::EnemyData::read(pak_index).context("read enemy_data")?;
 
-    debug!("Reading enemy drops");
-    let drops = drop::DropData::read(pak_index).context("read drop data")?;
+        debug!("Reading enemy status");
+        let status = status::EnemyStatus::read(pak_index).context("read enemy_status")?;
 
-    debug!("Reading library monsters");
-    let library_monsters =
-        library_monster::LibraryMonster::read(pak_index).context("read library monsters")?;
+        debug!("Reading enemy drops");
+        let drops = drop::DropData::read(pak_index).context("read drop data")?;
 
-    debug!("Merging enemy info");
-    let ret = data
-        .into_iter()
-        .map(|d| {
-            Enemy {
-                name: strings.id_lookup[&d.name_id].clone(),
-                library_note: library_monsters
-                    .iter()
-                    .find(|l| l.monster_tag == d.monster_tag)
-                    .map(|l| {
-                        l.note_id
-                            .iter()
-                            .filter_map(|id| strings.id_lookup.get(id).cloned())
-                            .collect::<Vec<_>>()
-                            .join("\n")
-                    }),
-                is_big: d.is_big,
-                img_no: d.img_no,
-                wait_action: d.wait_action,
-                library_rank_health: d.library_rank[0],
-                library_rank_attack: d.library_rank[1],
-                library_rank_speed: d.library_rank[2],
-                library_rank_defense: d.library_rank[3],
-                dlc: d.dlc.get(0).cloned(),
-                shoot_up: d.shoot_up,
-                chara_tag: d.chara_tag,
-                race_tag: d.race_tag,
-                size: d.size,
-                division: d.division,
+        debug!("Reading library monsters");
+        let library_monsters =
+            library_monster::LibraryMonster::read(pak_index).context("read library monsters")?;
 
-                // Ideally, we'd use `status.drain_filter` but this is not stable yet
-                // this would allow us to avoid copying and allows us to later check if we got everything
-                // see: rust-lang/rust#43244
-                statusses: status
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, s)| s.monster_tag == d.monster_tag)
-                    .map(|(i, s)| EnemyStatus {
-                        exp: s.exp,
-                        money: s.money,
-                        exp_rosca: s.exp_rosca,
-                        money_rosca: s.money_rosca,
-                        gold_coin: s.gold_coin,
-                        gold_coin_rate: s.gold_coin_rate,
-                        drop_tag: s.drop_tag.clone(),
-                        skill_tag: s.skill_tag.clone(),
-                        extra_skill_tag: s.extra_skill_tag.clone(),
-                        lv: s.lv,
-                        stun: s.stun,
-                        key_make: s.key_make,
-                        atk_num: s.atk_num,
-                        burst_up: s.burst_up,
-                        burst_max: s.burst_max,
-                        hp: s.hp,
-                        atk: s.atk,
-                        def: s.def,
-                        spd: s.spd,
-                        bad_resist: s.bad_resist.clone(),
-                        resist_non: s.resist_non,
-                        key_create_tag: s.key_create_tag.clone(),
-                        att: s.att.clone(),
+        debug!("Merging enemy info");
+        let ret = data
+            .into_iter()
+            .map(|d| {
+                Enemy {
+                    name: ctx.strings_table.id_lookup[&d.name_id].clone(),
+                    library_note: library_monsters
+                        .iter()
+                        .find(|l| l.monster_tag == d.monster_tag)
+                        .map(|l| {
+                            l.note_id
+                                .iter()
+                                .filter_map(|id| ctx.strings_table.id_lookup.get(id).cloned())
+                                .collect::<Vec<_>>()
+                                .join("\n")
+                        }),
+                    is_big: d.is_big,
+                    img_no: d.img_no,
+                    wait_action: d.wait_action,
+                    library_rank_health: d.library_rank[0],
+                    library_rank_attack: d.library_rank[1],
+                    library_rank_speed: d.library_rank[2],
+                    library_rank_defense: d.library_rank[3],
+                    dlc: d.dlc.get(0).cloned(),
+                    shoot_up: d.shoot_up,
+                    chara_tag: d.chara_tag,
+                    race_tag: d.race_tag,
+                    size: d.size,
+                    division: d.division,
 
-                        sp_item_tag: drops[i].sp_item_tag[0].clone(),
-                        drops: (0..drops[i].num.len())
-                            .map(|j| EnemyDrop {
-                                item_tag: drops[i].item_tag[j].clone(),
-                                rate: drops[i].rate[j],
-                                num: drops[i].num[j],
-                                quality_min: drops[i].quality_min[j],
-                                quality_max: drops[i].quality_max[j],
-                                potential_min: drops[i].potential_min[j],
-                                potential_max: drops[i].potential_max[j],
-                                potential_num_min: drops[i].potential_num_min[j],
-                                potential_num_max: drops[i].potential_num_max[j],
-                                potential_lv_min: drops[i].potential_lv_min[j],
-                                potential_lv_max: drops[i].potential_lv_max[j],
-                                quality_min_adj: drops[i].quality_min_adj[j],
-                                quality_max_adj: drops[i].quality_max_adj[j],
-                                potential_min_adj: drops[i].potential_min_adj[j],
-                                potential_max_adj: drops[i].potential_max_adj[j],
-                                potential_num_min_adj: drops[i].potential_num_min_adj[j],
-                                potential_num_max_adj: drops[i].potential_num_max_adj[j],
-                                potential_lv_min_adj: drops[i].potential_lv_min_adj[j],
-                                potential_lv_max_adj: drops[i].potential_lv_max_adj[j],
-                                super_pot_rate: drops[i].super_pot_rate[j],
-                                factor: drops[i].factor[j].clone(),
-                                eff: drops[i].eff.get(j).cloned().flatten(),
-                            })
-                            .collect(),
-                    })
-                    .collect(),
-                monster_tag: d.monster_tag,
-            }
-        })
-        .collect();
+                    // Ideally, we'd use `status.drain_filter` but this is not stable yet
+                    // this would allow us to avoid copying and allows us to later check if we got everything
+                    // see: rust-lang/rust#43244
+                    statusses: status
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, s)| s.monster_tag == d.monster_tag)
+                        .map(|(i, s)| EnemyStatus {
+                            exp: s.exp,
+                            money: s.money,
+                            exp_rosca: s.exp_rosca,
+                            money_rosca: s.money_rosca,
+                            gold_coin: s.gold_coin,
+                            gold_coin_rate: s.gold_coin_rate,
+                            drop_tag: s.drop_tag.clone(),
+                            skill_tag: s.skill_tag.clone(),
+                            extra_skill_tag: s.extra_skill_tag.clone(),
+                            lv: s.lv,
+                            stun: s.stun,
+                            key_make: s.key_make,
+                            atk_num: s.atk_num,
+                            burst_up: s.burst_up,
+                            burst_max: s.burst_max,
+                            hp: s.hp,
+                            atk: s.atk,
+                            def: s.def,
+                            spd: s.spd,
+                            bad_resist: s.bad_resist.clone(),
+                            resist_non: s.resist_non,
+                            key_create_tag: s.key_create_tag.clone(),
+                            att: s.att.clone(),
 
-    Ok(ret)
+                            sp_item_tag: drops[i].sp_item_tag[0].clone(),
+                            drops: (0..drops[i].num.len())
+                                .map(|j| EnemyDrop {
+                                    item_tag: drops[i].item_tag[j].clone(),
+                                    rate: drops[i].rate[j],
+                                    num: drops[i].num[j],
+                                    quality_min: drops[i].quality_min[j],
+                                    quality_max: drops[i].quality_max[j],
+                                    potential_min: drops[i].potential_min[j],
+                                    potential_max: drops[i].potential_max[j],
+                                    potential_num_min: drops[i].potential_num_min[j],
+                                    potential_num_max: drops[i].potential_num_max[j],
+                                    potential_lv_min: drops[i].potential_lv_min[j],
+                                    potential_lv_max: drops[i].potential_lv_max[j],
+                                    quality_min_adj: drops[i].quality_min_adj[j],
+                                    quality_max_adj: drops[i].quality_max_adj[j],
+                                    potential_min_adj: drops[i].potential_min_adj[j],
+                                    potential_max_adj: drops[i].potential_max_adj[j],
+                                    potential_num_min_adj: drops[i].potential_num_min_adj[j],
+                                    potential_num_max_adj: drops[i].potential_num_max_adj[j],
+                                    potential_lv_min_adj: drops[i].potential_lv_min_adj[j],
+                                    potential_lv_max_adj: drops[i].potential_lv_max_adj[j],
+                                    super_pot_rate: drops[i].super_pot_rate[j],
+                                    factor: drops[i].factor[j].clone(),
+                                    eff: drops[i].eff.get(j).cloned().flatten(),
+                                })
+                                .collect(),
+                        })
+                        .collect(),
+                    monster_tag: d.monster_tag,
+                }
+            })
+            .collect();
+
+        Ok(ret)
+    }
 }
