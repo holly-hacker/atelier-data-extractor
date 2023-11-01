@@ -70,7 +70,7 @@ fn init_logging(args: &CliArgs) {
     let level_filter = LevelFilter::from_level(log_level);
 
     let target_filter = FilterFn::new(|md| {
-        md.target().starts_with("data_prepper")
+        md.target().starts_with("atelier_data_extractor")
             || md.target().starts_with("gust_g1t")
             || md.target().starts_with("gust_pak")
             || md.target().starts_with("dds_decoder")

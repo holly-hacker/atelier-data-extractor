@@ -46,6 +46,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "atelier-data-extractor"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "argh",
+ "encoding_rs",
+ "gust-g1t",
+ "gust-pak",
+ "memchr",
+ "oxipng",
+ "png",
+ "rayon",
+ "roxmltree",
+ "serde",
+ "serde_json",
+ "tracing",
+ "tracing-subscriber",
+ "typescript-type-def",
+ "webp",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -202,28 +224,6 @@ dependencies = [
  "darling_core",
  "quote",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "data-prepper"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "argh",
- "encoding_rs",
- "gust-g1t",
- "gust-pak",
- "memchr",
- "oxipng",
- "png",
- "rayon",
- "roxmltree",
- "serde",
- "serde_json",
- "tracing",
- "tracing-subscriber",
- "typescript-type-def",
- "webp",
 ]
 
 [[package]]
