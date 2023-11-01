@@ -23,7 +23,7 @@ pub struct GimmickProperty {
     pub model: Option<String>,
 
     pub parameters: Vec<Option<String>>,
-    pub unique_params: Vec<BTreeMap<String, String>>, // TODO: use hashmaps in file
+    pub unique_params: Vec<BTreeMap<String, String>>,
 }
 
 impl GimmickProperty {

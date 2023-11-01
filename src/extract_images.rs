@@ -85,7 +85,6 @@ impl Args {
         debug!("Creating output directory");
         std::fs::create_dir_all(&output_directory).context("create output directory")?;
 
-        // TODO: switch on game type
         match game_version {
             gust_pak::common::GameVersion::A17 => {
                 sophie::extract_images(&self, &mut pak_index, &output_directory, self.category)?

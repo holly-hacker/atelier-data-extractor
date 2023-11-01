@@ -100,7 +100,7 @@ fn extract_map_texture(
     mut tiles: Vec<(String, usize)>,
     output_directory: &Path,
 ) -> anyhow::Result<Option<MapInfo>> {
-    // TODO: not really needed, just for debugging purposes
+    // NOTE: not really needed, just for debugging purposes. this doesn't add noticeable overhead
     tiles.sort_by_key(|(_, idx)| *idx);
 
     let max_tile = tiles.iter().map(|(_, idx)| idx).max().unwrap();
@@ -264,7 +264,6 @@ fn extract_map_texture(
                 } else {
                     unscaled_tile.scale_down((scale_factor, scale_factor))
                 };
-                // TODO: maybe pad to 256x256? check if leaflet pads non-square images by themselves
 
                 let path = format!(
                     "{map_idx}/{zoom_level}/{y}_{x}.webp",
