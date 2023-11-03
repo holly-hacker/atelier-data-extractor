@@ -28,9 +28,9 @@ pub struct Args {
     #[argh(option, short = 'c')]
     pub compression: Option<u8>,
 
-    /// the category of images to extract. if not present, extract all images
+    /// the categories of images to extract. if not present, extract all images
     #[argh(option)]
-    pub category: Option<Category>,
+    pub category: Vec<Category>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -87,10 +87,10 @@ impl Args {
 
         match game_version {
             gust_pak::common::GameVersion::A17 => {
-                sophie::extract_images(&self, &mut pak_index, &output_directory, self.category)?
+                sophie::extract_images(&self, &mut pak_index, &output_directory, &self.category)?
             }
             gust_pak::common::GameVersion::A24 => {
-                ryza3::extract_images(&self, &mut pak_index, &output_directory, self.category)?
+                ryza3::extract_images(&self, &mut pak_index, &output_directory, &self.category)?
             }
             _ => bail!("Unsupported game version {:?}", game_version),
         }

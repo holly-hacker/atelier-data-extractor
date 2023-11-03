@@ -11,9 +11,9 @@ pub fn extract_images(
     args: &Args,
     pak_index: &mut PakIndex,
     output_directory: &Path,
-    category: Option<Category>,
+    category: &[Category],
 ) -> anyhow::Result<()> {
-    if category.is_none() || category == Some(Category::Items) {
+    if category.is_empty() || category.contains(&Category::Items) {
         info!("Extracting item icons");
         let options = ExtractSpritesOptions {
             pattern: r"\Data\Win32\ui_JP\a17_item_l_*.g1t",

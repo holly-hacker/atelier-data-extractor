@@ -18,9 +18,9 @@ pub fn extract_images(
     args: &Args,
     pak_index: &mut PakIndex,
     output_directory: &Path,
-    category: Option<Category>,
+    category: &[Category],
 ) -> anyhow::Result<()> {
-    if category.is_none() || category == Some(Category::Monsters) {
+    if category.is_empty() || category.contains(&Category::Monsters) {
         info!("Extracting monster portraits");
         let options = ExtractSpritesOptions {
             pattern: r"\data\x64\res_cmn\ui\neo\neo_a24_monster_l_*.g1t",
@@ -33,7 +33,7 @@ pub fn extract_images(
             .context("extract monster portraits")?;
     }
 
-    if category.is_none() || category == Some(Category::Items) {
+    if category.is_empty() || category.contains(&Category::Items) {
         info!("Extracting item icons");
         let options = ExtractSpritesOptions {
             pattern: r"\data\x64\res_cmn\ui\neo\neo_a24_item_l_*.g1t",
@@ -46,13 +46,13 @@ pub fn extract_images(
             .context("extract item icons")?;
     }
 
-    if category.is_none() || category == Some(Category::Maps) {
+    if category.is_empty() || category.contains(&Category::Maps) {
         info!("Extracting map textures");
         extract_maps::extract_map_textures(args, pak_index, output_directory)
             .context("extract map textures")?;
     }
 
-    if category.is_none() || category == Some(Category::Misc) {
+    if category.is_empty() || category.contains(&Category::Misc) {
         info!("Extracting misc textures");
 
         let icons_directory = output_directory.join("icons");
