@@ -12,7 +12,7 @@ use crate::{ryza3, sophie};
 
 /// Generate typescript definitions
 #[derive(FromArgs)]
-#[argh(subcommand, name = "type-defs")]
+#[argh(subcommand, name = "typedefs")]
 pub struct Args {
     /// the output folder
     #[argh(option, short = 'o')]

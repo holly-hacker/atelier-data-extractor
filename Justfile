@@ -4,7 +4,7 @@ default:
 
 # Write out static information such as typedefs
 extract-static:
-    cargo run -- type-defs -o ../atelier-data -c all-games
+    cargo run -- typedefs -o ../atelier-data -c all-games
 
 # Extract game info and generate typescript definitions for the atelier-data repo
 extract-data GAME_DIR:
