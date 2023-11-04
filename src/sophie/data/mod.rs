@@ -7,6 +7,7 @@ use tracing::{debug, info};
 use crate::utils::{game_slug, PakIndex};
 
 mod doll_making;
+mod item_effects;
 mod items;
 mod presents;
 mod rumors;
@@ -34,4 +35,5 @@ crate::generate_data_functions!(
     presents::PresentInfo,
     Vec::<rumors::Rumor>,
     Vec::<doll_making::Doll>,
+    Vec::<item_effects::ItemEffect>,
 );
