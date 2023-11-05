@@ -6,12 +6,18 @@ use typescript_type_def::TypeDef;
 use crate::utils::{ExtractableData, PakIndex};
 
 mod item_data;
+mod library_item;
 
 #[derive(Serialize, TypeDef)]
 pub struct Item {
     pub name: String,
     pub tag: String,
     pub image_no: usize,
+    /// The description of this item as shown in the in-game library.
+    pub library_note: Option<String>,
+    /// Whether this item is shown in the in-game library.
+    pub library_note_permit: bool,
+    pub library_note_icons: [Option<u32>; 4],
     pub cost: i32,
     pub use_type: String,
     pub base: String,
@@ -49,14 +55,37 @@ impl ExtractableData<super::SophieContext> for Vec<Item> {
     fn read(pak_index: &mut PakIndex, _ctx: &super::SophieContext) -> anyhow::Result<Self> {
         debug!("Reading item data");
         let item_data = item_data::ItemData::read(pak_index).context("read item data")?;
+        let library_item =
+            library_item::LibraryItem::read(pak_index).context("read item library data")?;
 
         let items = item_data
             .into_iter()
-            .map(|item| {
+            .enumerate()
+            .map(|(i, item)| {
                 Ok(Item {
                     name: item.name,
                     tag: item.tag,
                     image_no: item.image_no,
+                    library_note: library_item[i].note.clone(),
+                    library_note_permit: library_item[i].permit,
+                    library_note_icons: [
+                        match library_item[i].icon0 {
+                            -1 => None,
+                            x => Some(x as u32),
+                        },
+                        match library_item[i].icon1 {
+                            -1 => None,
+                            x => Some(x as u32),
+                        },
+                        match library_item[i].icon2 {
+                            -1 => None,
+                            x => Some(x as u32),
+                        },
+                        match library_item[i].icon3 {
+                            -1 => None,
+                            x => Some(x as u32),
+                        },
+                    ],
                     cost: item.cost,
                     use_type: item.use_type,
                     base: item.base,

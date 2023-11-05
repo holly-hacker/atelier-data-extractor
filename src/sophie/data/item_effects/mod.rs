@@ -1,4 +1,5 @@
 mod item_effect;
+mod library_eff_detail;
 
 use anyhow::Context;
 
@@ -10,6 +11,10 @@ use super::SophieContext;
 pub struct ItemEffect {
     pub name: String,
     pub tag: String,
+    /// The description of this effect as shown in the in-game library.
+    pub library_note: Option<String>,
+    /// Whether this effect is shown in the in-game library.
+    pub library_note_permit: bool,
     /// Hit sound effect
     pub hit_se: Option<String>,
     pub group_tag: String,
@@ -34,12 +39,17 @@ impl ExtractableData<SophieContext> for Vec<ItemEffect> {
     fn read(pak_index: &mut crate::utils::PakIndex, _ctx: &SophieContext) -> anyhow::Result<Self> {
         let item_effects =
             item_effect::ItemEffect::read(pak_index).context("read item effect data")?;
+        let library_eff_detail = library_eff_detail::LibraryEffDetail::read(pak_index)
+            .context("read effect library data")?;
 
         let mapped = item_effects
             .into_iter()
-            .map(|e| ItemEffect {
+            .enumerate()
+            .map(|(i, e)| ItemEffect {
                 name: e.item_effect_name,
                 tag: e.item_effect_tag,
+                library_note: library_eff_detail[i].note.clone(),
+                library_note_permit: library_eff_detail[i].permit,
                 hit_se: e.hit_se,
                 group_tag: e.g_tag,
                 actions: [
