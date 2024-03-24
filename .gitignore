@@ -10,3 +10,5 @@ typedefs.d.ts
 # RustRover files
 .idea
 
+# direnv directory, contains flake profiles
+.direnv
