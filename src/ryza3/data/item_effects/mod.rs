@@ -138,9 +138,7 @@ impl ExtractableData<super::Ryza3Context> for ItemEffectData {
                             .filter(|a| a != "ATT_NONE");
 
                         // Filter out attributes where the action is `ACT_NONE`. This is mostly padding.
-                        let Some(action) = action else {
-                            return None;
-                        };
+                        let action = action?;
 
                         Some(EffectAttribute {
                             attribute,

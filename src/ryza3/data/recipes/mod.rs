@@ -361,12 +361,8 @@ fn map_recipe_data(
                             let value = p.v.get(i).cloned().flatten();
                             let element_value = p.e.get(i).cloned().flatten();
 
-                            let Some(value) = value else {
-                                return None;
-                            };
-                            let Some(element_value) = element_value else {
-                                return None;
-                            };
+                            let value = value?;
+                            let element_value = element_value?;
 
                             Some(RingParameter {
                                 value,

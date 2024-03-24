@@ -116,7 +116,7 @@ impl ExtractableData<super::Ryza3Context> for Vec<Item> {
                     w_atk: d.w_atk,
                     w_def: d.w_def,
                     w_spd: d.w_spd,
-                    dlc: d.dlc.get(0).cloned(),
+                    dlc: d.dlc.first().cloned(),
                     use_tag: d.use_tag,
                     kind_tag: d.kind_tag,
                     bme: d.bme,

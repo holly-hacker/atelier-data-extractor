@@ -136,7 +136,7 @@ impl ExtractableData<super::Ryza3Context> for Vec<Enemy> {
                     library_rank_attack: d.library_rank[1],
                     library_rank_speed: d.library_rank[2],
                     library_rank_defense: d.library_rank[3],
-                    dlc: d.dlc.get(0).cloned(),
+                    dlc: d.dlc.first().cloned(),
                     shoot_up: d.shoot_up,
                     chara_tag: d.chara_tag,
                     race_tag: d.race_tag,
